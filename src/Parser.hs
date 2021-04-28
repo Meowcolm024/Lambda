@@ -50,5 +50,11 @@ parseLambda =
         <|> parseTerm
 
 parseTerm :: Parser Lang
-parseTerm =
-    try (App <$> parseFactor <* many1 space <*> parseLambda) <|> parseFactor  -- ! problem !
+parseTerm = do
+    first <- parseFactor
+    rest  <- optionMaybe $ do
+        many1 space
+        parseLambda
+    return $ case rest of
+        Just r  -> App first r
+        Nothing -> first
