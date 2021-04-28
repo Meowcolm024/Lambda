@@ -1,60 +1,44 @@
 module Parser where
 
-import           Data.Char                      ( isAlpha )
+
+import           Lambda                         ( Lambda(..)
+                                                , Lang(..)
+                                                )
 import           Text.ParserCombinators.Parsec
 
-data Lam = Named String Lang | Raw Lang deriving Show
-
-data Lang = Atom String
-          | Fun String Lang
-          | App Lang Lang
-          deriving Show
-
 -- expr   = \ ID . expr | term
--- term   = factor expr? | factor <- don't know qaq
+-- term   = term factor | factor
 -- factor = ID | ( expr )
 
 regularParse :: Parser a -> String -> Either ParseError a
 regularParse p = parse p "(unknown)"
 
 -- parse input
-parseAll :: Parser Lam
+parseAll :: Parser Lang
 parseAll =
     Named
-        <$> (many1 (satisfy isAlpha) <* spaces <* char '=' <* spaces)
+        <$> (many1 alphaNum <* spaces <* char '=' <* spaces)
         <*> parseLambda
         <|> Raw
         <$> parseLambda
 
-parseFactor :: Parser Lang
+-- parse lambda expression
+parseLambda :: Parser Lambda
+parseLambda =
+    Fun
+        <$> (char '\\' *> spaces *> many1 alphaNum <* char '.' <* spaces)
+        <*> parseLambda
+        <|> parseTerm
+
+parseTerm :: Parser Lambda
+parseTerm = (parseFactor <* spaces) `chainl1` pure App
+
+parseFactor :: Parser Lambda
 parseFactor =
     Atom
-        <$> many1 (satisfy isAlpha)
+        <$> many1 alphaNum
         <|> char '('
         *>  spaces
         *>  parseLambda
         <*  spaces
         <*  char ')'
-
--- parse lambda expression
-parseLambda :: Parser Lang
-parseLambda =
-    Fun
-        <$> (  char '\\'
-            *> spaces
-            *> many1 (satisfy isAlpha)
-            <* char '.'
-            <* spaces
-            )
-        <*> parseLambda
-        <|> parseTerm
-
-parseTerm :: Parser Lang
-parseTerm = do
-    first <- parseFactor
-    rest  <- optionMaybe $ do
-        many1 space
-        parseLambda
-    return $ case rest of
-        Just r  -> App first r
-        Nothing -> first
