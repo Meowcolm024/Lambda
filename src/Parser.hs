@@ -1,6 +1,6 @@
 module Parser where
 
-import           Data.Char
+import           Data.Char                      ( isAlpha )
 import           Lambda                         ( Lambda(..)
                                                 , Lang(..)
                                                 )
@@ -18,19 +18,22 @@ parseAll :: Parser Lang
 parseAll = choice
     [ try
     $   Named
-    <$> (many1 identifiers <* spaces <* char '=' <* spaces)
+    <$> (identifiers <* spaces <* char '=' <* spaces)
     <*> parseLambda
     , Raw <$> parseLambda
     ]
 
-identifiers :: Parser Char
-identifiers = satisfy isAlpha <|> char '_'
+identifiers :: Parser String
+identifiers = many1 $ satisfy isAlpha <|> char '_'
+
+inside :: Parser a -> Parser a -> Parser b -> Parser b
+inside l r p = l *> spaces *> p <* spaces <* r
 
 -- parse lambda expression
 parseLambda :: Parser Lambda
 parseLambda =
     Fun
-        <$> (char '\\' *> spaces *> many1 identifiers <* char '.' <* spaces)
+        <$> inside (spaces *> char '\\') (char '.' <* spaces) identifiers
         <*> parseLambda
         <|> parseTerm
 
@@ -39,11 +42,4 @@ parseTerm :: Parser Lambda
 parseTerm = (parseFactor <* spaces) `chainl1` pure App
 
 parseFactor :: Parser Lambda
-parseFactor =
-    Atom
-        <$> many1 identifiers
-        <|> char '('
-        *>  spaces
-        *>  parseLambda
-        <*  spaces
-        <*  char ')'
+parseFactor = Atom <$> identifiers <|> inside (char '(') (char ')') parseLambda
