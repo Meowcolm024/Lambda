@@ -1,6 +1,7 @@
 module Parser where
 
 import           Data.Char                      ( isAlpha )
+import           Data.Functor                   ( ($>) )
 import           Lambda                         ( Lambda(..)
                                                 , Lang(..)
                                                 )
@@ -31,15 +32,18 @@ inside l r p = l *> spaces *> p <* spaces <* r
 
 -- parse lambda expression
 parseLambda :: Parser Lambda
-parseLambda =
+parseLambda = parseLambda' <|> parseTerm
+
+parseLambda' :: Parser Lambda
+parseLambda' =
     Fun
         <$> inside (spaces *> char '\\') (char '.' <* spaces) identifiers
         <*> parseLambda
-        <|> parseTerm
 
--- ! solved assoc but new peoblem occurs QAQ
+-- ? solved?
 parseTerm :: Parser Lambda
-parseTerm = (parseFactor <* spaces) `chainl1` pure App
+parseTerm = (parseFactor <|> parseLambda') `chainl1` (spaces $> App)
+
 
 parseFactor :: Parser Lambda
 parseFactor = Atom <$> identifiers <|> inside (char '(') (char ')') parseLambda
