@@ -31,17 +31,16 @@ irreducible :: Env -> Lambda -> Bool
 irreducible env (Atom a) = case Map.lookup a env of
     Just expr -> expr == Atom a
     Nothing   -> True
-irreducible env (App (Fun _ _) _) = False
+irreducible _   (App (Fun _ _) _) = False
 irreducible env (App l         r) = irreducible env l && irreducible env r
 irreducible env (Fun x         b) = irreducible (rebindLocal x env) b
 
--- ! eval may not be corrrect !
--- ? Y combinator can not be reduced !
+{-# WARNING reduce "Incorrect code" #-}
 reduce :: Env -> Lambda -> Lambda
 reduce env (Atom a) = case Map.lookup a env of
-    Just expr -> reduce' env expr
-    Nothing   -> Atom a
-reduce env (Fun x b) = Fun x (reduce' (rebindLocal x env) b)
+    Just expr        -> reduce' env expr
+    Nothing          -> Atom a
+reduce env (Fun x b) = Fun x (reduce' (rebindLocal x env) b)    -- ! error here ! this is eager
 reduce env (App a@(Atom _) r@(Atom _)) =
     reduce' env $ App (reduce' env a) (reduce' env r)
 reduce env (App a@(Atom _ ) expr) = reduce' env $ App (reduce' env a) expr
