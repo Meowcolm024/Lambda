@@ -26,16 +26,27 @@ rebindApp = Map.insert
 clearEnv :: Env -> Env
 clearEnv = const Map.empty
 
+-- | check whether an expression is irreducible
+irreducible :: Env -> Lambda -> Bool
+irreducible env (Atom a) = case Map.lookup a env of
+    Just expr -> expr == Atom a
+    Nothing   -> True
+irreducible env (App (Fun _ _) _) = False
+irreducible env (App l         r) = irreducible env l && irreducible env r
+irreducible env (Fun x         b) = irreducible (rebindLocal x env) b
+
+-- ! eval may not be corrrect !
+-- ? Y combinator can not be reduced !
 reduce :: Env -> Lambda -> Lambda
 reduce env (Atom a) = case Map.lookup a env of
-    Just expr -> reduce env expr
+    Just expr -> reduce' env expr
     Nothing   -> Atom a
-reduce env (Fun x           b   ) = Fun x (reduce (rebindLocal x env) b)
-reduce env (App a@(Atom _ ) expr) = reduce env $ App (reduce env a) expr
-reduce env (App (  Fun x b) expr) = reduce (rebindApp x expr env) b
-reduce _   _                      = undefined
+reduce env (Fun x b) = Fun x (reduce' (rebindLocal x env) b)
+reduce env (App a@(Atom _) r@(Atom _)) =
+    reduce' env $ App (reduce' env a) (reduce' env r)
+reduce env (App a@(Atom _ ) expr) = reduce' env $ App (reduce' env a) expr
+reduce env (App (  Fun x b) expr) = reduce' (rebindApp x expr env) b
+reduce env (App l           r   ) = reduce' env $ App (reduce' env l) r
 
--- tests
-
-testEnv :: Either String Env
-testEnv = addToEnv (Named "id" (Fun "x" (Atom "x"))) newEnv
+reduce' :: Env -> Lambda -> Lambda
+reduce' env expr = if irreducible env expr then expr else reduce env expr
