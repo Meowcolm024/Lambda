@@ -1,4 +1,7 @@
-module Lambda where
+module Lambda
+    ( Lang(..)
+    , Lambda(..)
+    ) where
 
 data Lang = Named String Lambda
           | Raw Lambda
@@ -17,6 +20,7 @@ instance Show Lang where
 
 showLambda :: Lambda -> String
 showLambda (Atom x               ) = x
+showLambda (Fun v        (Atom b)) = "\\" <> v <> "." <> b
 showLambda (Fun v        b       ) = "\\" <> v <> ".(" <> showLambda b <> ")"
 showLambda (App (Atom f) (Atom x)) = f <> " " <> x
 showLambda (App (Atom f) x       ) = f <> " (" <> showLambda x <> ")"
