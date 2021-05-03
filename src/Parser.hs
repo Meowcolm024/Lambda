@@ -20,8 +20,8 @@ parseAll = choice
     [ try
     $   Named
     <$> (identifiers <* spaces <* char '=' <* spaces)
-    <*> parseLambda
-    , Raw <$> parseLambda
+    <*> parseExpr
+    , Raw <$> parseExpr
     ]
 
 identifiers :: Parser String
@@ -31,19 +31,19 @@ inside :: Parser a -> Parser a -> Parser b -> Parser b
 inside l r p = l *> spaces *> p <* spaces <* r
 
 -- parse lambda expression
-parseLambda :: Parser Lambda
-parseLambda = parseLambda' <|> parseTerm
+parseExpr :: Parser Lambda
+parseExpr = parseLambda <|> parseTerm
 
-parseLambda' :: Parser Lambda
-parseLambda' =
+parseLambda :: Parser Lambda
+parseLambda =
     Fun
         <$> inside (spaces *> char '\\') (char '.' <* spaces) identifiers
-        <*> parseLambda
+        <*> parseExpr
 
 -- ? solved?
 parseTerm :: Parser Lambda
-parseTerm = (parseFactor <|> parseLambda') `chainl1` (spaces $> App)
+parseTerm = (parseFactor <|> parseLambda) `chainl1` (spaces $> App)
 
 
 parseFactor :: Parser Lambda
-parseFactor = Atom <$> identifiers <|> inside (char '(') (char ')') parseLambda
+parseFactor = Atom <$> identifiers <|> inside (char '(') (char ')') parseExpr
