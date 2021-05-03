@@ -23,6 +23,7 @@ dependencies:
 - base >= 4.7 && < 5
 - parsec >= 3.1 && < 4
 - containers >= 0.6 && < 0.7
+- mtl >= 2.2 && < 3
 
 library:
   source-dirs: src

@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 554d98aa35523ccbd7b6e5a6e24e67e3861a9883e3c38fb957e13d3f3d64c2c2
+-- hash: 3cd2c661935fa93837a0a43e2ae40368b9ef68333070a5f69fdb807141326f32
 
 name:           Lambda
 version:        0.1.0.0
@@ -38,6 +38,7 @@ library
   build-depends:
       base >=4.7 && <5
     , containers >=0.6 && <0.7
+    , mtl >=2.2 && <3
     , parsec >=3.1 && <4
   default-language: Haskell2010
 
@@ -52,6 +53,7 @@ executable Lambda-exe
       Lambda
     , base >=4.7 && <5
     , containers >=0.6 && <0.7
+    , mtl >=2.2 && <3
     , parsec >=3.1 && <4
   default-language: Haskell2010
 
@@ -67,5 +69,6 @@ test-suite Lambda-test
       Lambda
     , base >=4.7 && <5
     , containers >=0.6 && <0.7
+    , mtl >=2.2 && <3
     , parsec >=3.1 && <4
   default-language: Haskell2010
