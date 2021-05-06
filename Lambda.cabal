@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 5bcd5e3e9983a29a652498e950adb2564caa40b4b2cc11eb4125977e53d50ee2
+-- hash: d0c70b4a78705ee64ca0fafa1424a61469f90f394801dbd5d9580ceeec0c3cc0
 
 name:           Lambda
 version:        0.1.0.0
@@ -30,7 +30,6 @@ library
       Combinator
       Interpreter
       Lambda
-      Lib
       Parser
   other-modules:
       Paths_Lambda

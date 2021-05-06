@@ -40,10 +40,8 @@ parseLambda =
         <$> inside (spaces *> char '\\') (char '.' <* spaces) identifiers
         <*> parseExpr
 
--- ? solved?
 parseTerm :: Parser Lambda
 parseTerm = (parseFactor <|> parseLambda) `chainl1` (spaces $> App)
-
 
 parseFactor :: Parser Lambda
 parseFactor = Atom <$> identifiers <|> inside (char '(') (char ')') parseExpr

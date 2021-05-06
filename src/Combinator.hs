@@ -26,6 +26,24 @@ rebindApp = Map.insert
 clearEnv :: Env -> Env
 clearEnv = const Map.empty
 
+-- | unfold binding in the env
+--   reject recursive bindings and bindings with free variables
+unfold :: Maybe String -> Env -> Lambda -> Either String Lambda
+unfold (Just x) env (Atom a) = if x == a
+    then Left $ "Error: recursive definition of " <> x
+    else case Map.lookup a env of
+        Just expr ->
+            if expr == Atom a then Right expr else unfold Nothing env expr      -- assume well-formed expr in env
+        Nothing -> Left $ "Error: free variables in definition of " <> x
+unfold Nothing env (Atom a) = case Map.lookup a env of
+    Just expr -> if expr == Atom a then Right expr else unfold Nothing env expr
+    Nothing   -> Right $ Atom a
+unfold (Just x) env (Fun v b) = Fun v <$> if x == v
+    then unfold Nothing (rebindApp v (Atom v) env) b
+    else unfold (Just x) (rebindApp v (Atom v) env) b
+unfold x env (Fun v b) = Fun v <$> unfold x (rebindApp v (Atom v) env) b
+unfold x env (App l r) = App <$> unfold x env l <*> unfold x env r
+
 -- | check whether an expression is irreducible
 irreducible :: Env -> Lambda -> Bool
 irreducible env (Atom a) = case Map.lookup a env of
@@ -37,9 +55,7 @@ irreducible env (Fun x         b) = irreducible (rebindLocal x env) b
 
 {-# WARNING reduce "Incorrect code" #-}
 reduce :: Env -> Lambda -> Lambda
-reduce env (Atom a) = case Map.lookup a env of
-    Just expr        -> reduce' env expr
-    Nothing          -> Atom a
+reduce _   (Atom a ) = Atom a
 reduce env (Fun x b) = Fun x (reduce' (rebindLocal x env) b)    -- ! error here ! this is eager
 reduce env (App a@(Atom _) r@(Atom _)) =
     reduce' env $ App (reduce' env a) (reduce' env r)

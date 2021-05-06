@@ -1,6 +1,6 @@
 module Main where
 
-import Lib
+import           Interpreter                    ( )
 
 main :: IO ()
-main = someFunc
+main = putStrLn "oops!s"
